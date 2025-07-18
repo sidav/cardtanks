@@ -6,15 +6,19 @@ import (
 )
 
 const (
-	BF_WIDTH    = 10
-	BF_HEIGHT   = 10
-	TEAM_PLAYER = 0
-	TEAM_ENEMY  = 1
+	BF_WIDTH       = 12
+	BF_HEIGHT      = 10
+	TEAM_NONE      = 0
+	TEAM_PLAYER    = 1
+	TEAM_ENEMY1     = 2
+	TEAM_ENEMY2    = 3
+	TEAM_ENEMY3    = 4
+	MAX_TEAM_CONST = 5 // needed for random team assignment
 )
 
 type battlefield struct {
 	state      battlefieldState
-	tiles      [BF_WIDTH][BF_HEIGHT]tileCode
+	tiles      [BF_WIDTH][BF_HEIGHT]tile
 	playerTank *tank
 	tanks      []*tank
 
@@ -24,8 +28,8 @@ type battlefield struct {
 	totalEnemyTanks int
 }
 
-func (b *battlefield) tileAt(x, y int) tileCode {
-	return b.tiles[x][y]
+func (b *battlefield) tileAt(x, y int) *tile {
+	return &b.tiles[x][y]
 }
 
 func (b *battlefield) getTankAt(x, y int) *tank {
@@ -38,6 +42,10 @@ func (b *battlefield) getTankAt(x, y int) *tank {
 		}
 	}
 	return nil
+}
+
+func (b *battlefield) isPlayerTank(t *tank) bool {
+	return b.playerTank == t
 }
 
 func (b *battlefield) countTilesOfType(ttype tileCode) int {
@@ -77,7 +85,7 @@ func (b *battlefield) getHitCoordinatesIfTankFires(t *tank) *calc.IntVector2d {
 		if !b.areCoordsValid(x, y) {
 			break
 		}
-		if b.tileAt(x, y) == TILE_FOREST {
+		if b.tileAt(x, y).is(TILE_FOREST) {
 			continue
 		}
 		tankThere := b.getTankAt(x, y)
@@ -108,6 +116,10 @@ func (b *battlefield) tryMovingTankByVector(t *tank, vx, vy int) bool {
 }
 
 func (b *battlefield) tryPushingTankByVector(t *tank, vx, vy int) bool {
+	if vx == 0 && vy == 0 {
+		return false
+		// panic("Vector push failed: report this")
+	}
 	x, y := t.x+vx, t.y+vy
 	otherTank := b.getTankAt(x, y)
 	if otherTank != nil { // pushing the other tank
@@ -179,7 +191,7 @@ func (b *battlefield) countTilesOfTypeAroundCoords(ttype tileCode, x, y int) int
 			if i*j != 0 || (i == 0 && j == 0) {
 				continue
 			}
-			if b.areCoordsValid(x+i, y+j) && b.tileAt(x+i, y+j) == ttype {
+			if b.areCoordsValid(x+i, y+j) && b.tileAt(x+i, y+j).is(ttype) {
 				count++
 			}
 		}
@@ -207,13 +219,13 @@ func (b *battlefield) trySpawnNewEnemy() bool {
 	v := b.selectRandomMapCoordsByAllowanceFunc(func(x, y int) bool {
 		return b.tileAt(x, y).is(TILE_FLOOR) &&
 			b.getTankAt(x, y) == nil &&
-			(true || !b.lineOfFireExistsBetweenCoords(x, y, b.playerTank.x, b.playerTank.y))
+			!b.lineOfFireExistsBetweenCoords(x, y, b.playerTank.x, b.playerTank.y)
 	})
 	if v == nil {
 		return false
 	}
 	b.totalEnemyTanks--
-	newTank := createTank(TANK1, TEAM_ENEMY, v.X, v.Y)
+	newTank := createTank(TANK1, TEAM_ENEMY1, v.X, v.Y)
 	rotateTimes := rand.Intn(4)
 	for range rotateTimes {
 		newTank.rotateRight()

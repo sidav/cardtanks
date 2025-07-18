@@ -38,3 +38,11 @@ func (v *IntVector2d) Normalize() {
 		v.Y = v.Y / IntAbs(v.Y)
 	}
 }
+
+func (v *IntVector2d) RotateCCW() {
+	v.X, v.Y = v.Y, -v.X
+}
+
+func (v *IntVector2d) RotateCW() {
+	v.X, v.Y = -v.Y, v.X
+}

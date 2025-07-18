@@ -15,10 +15,11 @@ const (
 )
 
 type player struct {
-	maxHandSize int
-	deck        card.CardsStack
-	hand        card.CardsStack
-	discard     card.CardsStack
+	maxHandSize  int
+	deck         card.CardsStack
+	hand         card.CardsStack
+	discard      card.CardsStack
+	exhaustStack card.CardsStack
 
 	currentHoveredUIElement UIElementCode
 	currentHoveredCard      *card.Card
@@ -54,6 +55,9 @@ func (p *player) returnAllCardsToDeck() {
 	for p.discard.Size() > 0 {
 		p.deck.TakeTopCardFromOtherStack(&p.discard)
 	}
+	for p.exhaustStack.Size() > 0 {
+		p.deck.TakeTopCardFromOtherStack(&p.exhaustStack)
+	}
 }
 
 func (p *player) drawInitialHand() {
@@ -83,6 +87,11 @@ func (p *player) drawCard() {
 func (p *player) discardCard(c *card.Card) {
 	p.hand.RemoveCard(c)
 	p.discard.PushOnTop(c)
+}
+
+func (p *player) exhaustCard(c *card.Card) {
+	p.hand.RemoveCard(c)
+	p.exhaustStack.PushOnTop(c)
 }
 
 func (p *player) discardHand() {

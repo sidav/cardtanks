@@ -1,6 +1,7 @@
 package main
 
 import (
+	"cardtanks/calc"
 	"strconv"
 	"time"
 )
@@ -11,6 +12,7 @@ const (
 	BS_BEFORE_PLAYER_TURN bfStateCode = iota
 	BS_PLAYER_TURN
 	BS_PLAYER_MOVES
+	BS_PLAYER_SHOOTS_DURING_TURN
 	BS_PLAYER_ENDED_TURN
 	BS_NONPLAYER_TANK_MOVES
 	BS_SHOOT
@@ -26,6 +28,7 @@ type battlefieldState struct {
 	// stuff needed for the state continuation
 	actionsRemaining    int
 	currentEntityNumber int
+	intentVector        calc.IntVector2d
 
 	// General purpose vars, ARE RESET when switching states
 	stateStartTime time.Time

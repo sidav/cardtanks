@@ -7,6 +7,7 @@ import (
 )
 
 func (b *battlefield) playPlayerCard(plr *player, c *card.Card) {
+	pTank := b.playerTank
 	if !b.canCardBePlayed(plr, c) {
 		return
 	}
@@ -24,39 +25,120 @@ func (b *battlefield) playPlayerCard(plr *player, c *card.Card) {
 		// Nothing
 	case card.CARD_MOV1:
 		b.state.switchTo(BS_PLAYER_MOVES)
+		b.state.intentVector.SetEqTo(b.playerTank.getFacing())
 		b.state.actionsRemaining = 1
 
 	case card.CARD_MOV2:
 		b.state.switchTo(BS_PLAYER_MOVES)
+		b.state.intentVector.SetEqTo(b.playerTank.getFacing())
 		b.state.actionsRemaining = 2
 
 	case card.CARD_MOV3:
 		b.state.switchTo(BS_PLAYER_MOVES)
+		b.state.intentVector.SetEqTo(b.playerTank.getFacing())
 		b.state.actionsRemaining = 3
+
+	case card.CARD_MOVLEFT:
+		facingVector := calc.NewIntVector2d(pTank.getFacing())
+		facingVector.RotateCCW()
+		b.state.switchTo(BS_PLAYER_MOVES)
+		b.state.intentVector = facingVector
+		b.state.actionsRemaining = 1
+
+	case card.CARD_MOVRIGHT:
+		facingVector := calc.NewIntVector2d(pTank.getFacing())
+		facingVector.RotateCW()
+		b.state.switchTo(BS_PLAYER_MOVES)
+		b.state.intentVector = facingVector
+		b.state.actionsRemaining = 1
+
+	case card.CARD_INSTANTSHOOT:
+		b.state.switchTo(BS_PLAYER_SHOOTS_DURING_TURN)
 
 	case card.CARD_DRAWCARD:
 		if plr.hand.Size() >= plr.maxHandSize {
 			return
 		}
-		plr.drawCard()
+		for plr.hand.Size() < plr.maxHandSize {
+			plr.drawCard()
+		}
 		plr.actionsSpentForTurn += c.ActionsCost
 		plr.cardsPlayedThisTurn++
-		plr.discardCard(c)
+		if c.ExhaustedOnUse {
+			plr.exhaustCard(c)
+		} else {
+			plr.discardCard(c)
+		}
 		b.handlePlayerEndTurn(plr)
 		return
 
 	case card.CARD_FRIENDLYTANK:
+		x, y := b.playerTank.getCoordsFacingAt()
+		if !(b.tileAt(x, y).is(TILE_FLOOR) &&
+			b.getTankAt(x, y) == nil) {
+			return
+		}
+		friend := createTank(TANK1, TEAM_PLAYER, x, y)
+		friend.faceRandomDirection()
+		b.tanks = append(b.tanks, friend)
+		b.state.pauseFor(300)
+
+	case card.CARD_BUILD_WALLS_AROUND:
+		x, y := pTank.getCoords()
+		for i := x - 1; i <= x+1; i++ {
+			for j := y - 1; j <= y+1; j++ {
+				if b.areCoordsValid(i, j) && b.getTankAt(i, j) == nil {
+					if b.tileAt(i, j).isOneOf(TILE_FLOOR, TILE_WATER, TILE_DAMAGED_WALL) {
+						b.tileAt(i, j).spawnAs(TILE_WALL)
+					}
+				}
+			}
+		}
+		b.state.pauseFor(300)
+
+	case card.CARD_ROTATE_EVERYONE_RANDOMLY:
+		b.playerTank.faceRandomDirection()
+		b.playerTank.justSpawned = true
+		for _, t := range b.tanks {
+			t.faceRandomDirection()
+			t.justSpawned = true
+		}
+		b.state.pauseFor(300)
+
+	case card.CARD_APPLY_RANDOM_TEAMS:
+		for _, t := range b.tanks {
+			newTeam := TEAM_PLAYER
+			for newTeam == TEAM_PLAYER || newTeam == TEAM_NONE {
+				newTeam = rand.Intn(MAX_TEAM_CONST)
+			}
+			t.team = byte(newTeam)
+			t.justSpawned = true
+		}
+		b.state.pauseFor(300)
+
+	case card.CARD_SAFE_TELEPORT:
 		v := b.selectRandomMapCoordsByAllowanceFunc(func(x, y int) bool {
-			return b.tileAt(x, y).is(TILE_FLOOR) &&
-				calc.ApproxDistanceInt(x, y, b.playerTank.x, b.playerTank.y) == 1 &&
-				b.getTankAt(x, y) == nil
+			if !b.tileAt(x, y).isOneOf(TILE_FLOOR, TILE_ICE) {
+				return false
+			}
+			for _, t := range b.tanks {
+				if b.areTanksEnemies(b.playerTank, t) && b.lineOfFireExistsBetweenCoords(x, y, t.x, t.y) {
+					return false
+				}
+			}
+			return true
 		})
 		if v == nil {
 			return
 		}
-		friend := createTank(TANK1, TEAM_PLAYER, v.X, v.Y)
-		b.tanks = append(b.tanks, friend)
-		b.state.switchTo(BS_TEMP_PAUSE)
+		b.playerTank.justSpawned = true
+		b.playerTank.x, b.playerTank.y = v.Unwrap()
+		b.state.pauseFor(300)
+
+	case card.CARD_UNEXHAUST_OTHER_CARDS:
+		for plr.exhaustStack.Size() > 0 {
+			plr.discard.TakeTopCardFromOtherStack(&plr.exhaustStack)
+		}
 
 	default:
 		panic("Card '" + c.Title + "' not implemented")
@@ -64,7 +146,11 @@ func (b *battlefield) playPlayerCard(plr *player, c *card.Card) {
 
 	plr.actionsSpentForTurn += c.ActionsCost
 	plr.cardsPlayedThisTurn++
-	plr.discardCard(c)
+	if c.ExhaustedOnUse {
+		plr.exhaustCard(c)
+	} else {
+		plr.discardCard(c)
+	}
 }
 
 func (b *battlefield) canCardBePlayed(plr *player, c *card.Card) bool {

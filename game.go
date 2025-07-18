@@ -29,9 +29,10 @@ type game struct {
 
 func NewGame() *game {
 	g := &game{
-		state: GS_SELECT_BATTLE,
+		state: GS_SELECT_REWARD,
 		plr:   newPlayer(),
 		r:     &renderer{},
+		currentReward: GenerateNewReward(),
 	}
 	return g
 }

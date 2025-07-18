@@ -18,7 +18,7 @@ func (b *battlefield) GetMissionDescription() (missTitle, missDescr string) {
 	switch b.mission {
 	case BFM_SKIRMISH:
 		missTitle = "Skirmish"
-		missDescr = fmt.Sprintf("Destroy %d enemy tanks to win", b.totalEnemyTanks+b.countTanksOfTeam(TEAM_ENEMY))
+		missDescr = fmt.Sprintf("Destroy %d enemy tanks to win", b.totalEnemyTanks+b.countTanksOfTeam(TEAM_ENEMY1))
 	case BFM_CAPTURE_FLAGS:
 		missTitle = "Race for the flags"
 		missDescr = "Capture 3 flags to win"
@@ -53,7 +53,7 @@ func (b *battlefield) doMissionSpecificCheck() {
 func (b *battlefield) IsMissionWon() bool {
 	switch b.mission {
 	case BFM_SKIRMISH:
-		return b.totalEnemyTanks+b.countTanksOfTeam(TEAM_ENEMY) == 0
+		return b.totalEnemyTanks+b.countTanksOfTeam(TEAM_ENEMY1)+b.countTanksOfTeam(TEAM_ENEMY2)+b.countTanksOfTeam(TEAM_ENEMY3) == 0
 	case BFM_CAPTURE_FLAGS:
 		return b.missionProgress == 3
 	case BFM_DESTROY_EAGLES:

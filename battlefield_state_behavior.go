@@ -37,13 +37,24 @@ func (b *battlefield) actOnState(plr *player) {
 		}
 		if st.msElapsed(200) {
 			b.clearDestroyedTanks()
-			moved := b.tryPushingTankForward(b.playerTank)
+			moved := b.tryPushingTankByVector(b.playerTank, st.intentVector.X, st.intentVector.Y)
 			st.actionsRemaining--
 			st.resetTime()
 			if moved {
 				st.pauseFor(200)
 			}
 		}
+	case BS_PLAYER_SHOOTS_DURING_TURN:
+		if st.locked {
+			st.resetTime()
+		}
+		if !st.msElapsed(500) {
+			return
+		}
+		// Do the shooting
+		b.doShootingForTank(b.playerTank, plr)
+		b.clearDestroyedTanks()
+		st.switchTo(BS_PLAYER_TURN)
 
 	case BS_PLAYER_ENDED_TURN:
 		st.currentEntityNumber = 0
@@ -95,7 +106,7 @@ func (b *battlefield) actOnState(plr *player) {
 		st.switchTo(BS_SPAWN_NEW_ENEMIES)
 
 	case BS_SPAWN_NEW_ENEMIES:
-		enemiesToSpawn := b.maxTanksPerTeam - b.countTanksOfTeam(TEAM_ENEMY)
+		enemiesToSpawn := b.maxTanksPerTeam - b.countTanksOfTeam(TEAM_ENEMY1)
 		enemiesToSpawn = min(enemiesToSpawn, b.totalEnemyTanks)
 		for range enemiesToSpawn {
 			b.trySpawnNewEnemy()
@@ -113,8 +124,25 @@ func (b *battlefield) actOnState(plr *player) {
 	}
 }
 
+func (b *battlefield) PlayerWillTankShoot() bool {
+	v := b.getHitCoordinatesIfTankFires(b.playerTank)
+	if v == nil {
+		return false
+	}
+	tankThere := b.getTankAt(v.X, v.Y)
+	if tankThere != nil && !b.areTanksEnemies(b.playerTank, tankThere) {
+		return false
+	}
+	return b.tileAt(v.Unwrap()).team != b.playerTank.team
+}
+
 func (b *battlefield) doShootingForTank(t *tank, plr *player) {
-	if !b.aiWillTankShoot(t) {
+	if b.isPlayerTank(t) {
+		if !b.PlayerWillTankShoot() {
+			return
+		}
+
+	} else if !b.aiWillTankShoot(t) {
 		return
 	}
 	v := b.getHitCoordinatesIfTankFires(t)
@@ -141,6 +169,11 @@ func (b *battlefield) doBeginningOfTurnCleanup(plr *player) {
 }
 
 func (b *battlefield) cleanJustSpawnedStatuses() {
+	for x := range b.tiles {
+		for y := range b.tiles[x] {
+			b.tileAt(x, y).justSpawned = false
+		}
+	}
 	b.playerTank.justSpawned = false
 	for _, t := range b.tanks {
 		t.justSpawned = false

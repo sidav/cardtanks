@@ -1,5 +1,7 @@
 package main
 
+import "slices"
+
 type tileCode byte
 
 const (
@@ -15,8 +17,14 @@ const (
 	TILE_EAGLE
 )
 
-func (tc tileCode) getSpriteAtlas() *spriteAtlas {
-	switch tc {
+type tile struct {
+	code        tileCode
+	justSpawned bool
+	team        byte
+}
+
+func (t *tile) getSpriteAtlas() *spriteAtlas {
+	switch t.code {
 	case TILE_WALL:
 		return tileAtlaces["WALL"]
 	case TILE_DAMAGED_WALL:
@@ -37,40 +45,42 @@ func (tc tileCode) getSpriteAtlas() *spriteAtlas {
 	return nil
 }
 
-func (tc tileCode) is(code tileCode) bool {
-	return tc == code
+func (t *tile) is(code tileCode) bool {
+	return t.code == code
 }
 
-func (tc tileCode) canBeDrivenOn() bool {
-	return tc == TILE_FLOOR ||
-		tc == TILE_ENEMY_SPAWNER ||
-		tc == TILE_FOREST ||
-		tc == TILE_ICE ||
-		tc == TILE_WATER ||
-		tc == TILE_FLAG
+func (t *tile) isOneOf(codes ...tileCode) bool {
+	return slices.Contains(codes, t.code)
 }
 
-func (tc tileCode) willAiDriveOn() bool {
-	return tc.canBeDrivenOn() && tc != TILE_WATER
+// Sets the tile to code and also sets "just spawned" status
+func (t *tile) spawnAs(code tileCode) {
+	t.code = code
+	t.justSpawned = true
 }
 
-func (tc tileCode) willAiShootAt() bool {
-	return tc.isDestructible() && tc != TILE_EAGLE
+func (t *tile) canBeDrivenOn() bool {
+	return t.code == TILE_FLOOR ||
+		t.code == TILE_ENEMY_SPAWNER ||
+		t.code == TILE_FOREST ||
+		t.code == TILE_ICE ||
+		t.code == TILE_WATER ||
+		t.code == TILE_FLAG
 }
 
-func (tc tileCode) isDestructible() bool {
-	return tc == TILE_WALL || tc == TILE_DAMAGED_WALL || tc == TILE_EAGLE
+func (t *tile) isDestructible() bool {
+	return t.code == TILE_WALL || t.code == TILE_DAMAGED_WALL || t.code == TILE_EAGLE
 }
 
-func (tc tileCode) canBeShotThrough() bool {
-	return tc != TILE_WALL && tc != TILE_DAMAGED_WALL && tc != TILE_ARMOR && tc != TILE_EAGLE
+func (t *tile) canBeShotThrough() bool {
+	return t.code != TILE_WALL && t.code != TILE_DAMAGED_WALL && t.code != TILE_ARMOR && t.code != TILE_EAGLE
 }
 
-func (tc *tileCode) destroy() {
-	switch *tc {
+func (t *tile) destroy() {
+	switch t.code {
 	case TILE_WALL:
-		(*tc) = TILE_DAMAGED_WALL
+		(t.code) = TILE_DAMAGED_WALL
 	case TILE_DAMAGED_WALL, TILE_FLAG, TILE_EAGLE:
-		(*tc) = TILE_FLOOR
+		(t.code) = TILE_FLOOR
 	}
 }

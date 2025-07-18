@@ -78,7 +78,7 @@ func (r *renderer) renderCardAt(c *card.Card, x, y int, considerBfPlayability bo
 	)
 	r.drawString(fmt.Sprintf("(%d) %s", c.ActionsCost, c.Title),
 		int32(x), int32(y), 18, color)
-	r.drawTextInRect(c.Description, float32(x), float32(y + 22), CARD_W, 16, color)
+	r.drawTextInRect(c.GetDescription(), float32(x+1), float32(y + 22), CARD_W, 16, color)
 }
 
 func (r *renderer) drawString(text string, x, y, size int32, color rl.Color) {

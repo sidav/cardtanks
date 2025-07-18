@@ -31,7 +31,7 @@ func loadImageResources() {
 
 	tileAtlaces["WALL"] = CreateAtlasFromFile("assets/sprites.png", 16*0, 16*0, 16, 16, 1, false)
 	tileAtlaces["DAMAGED_WALL"] = CreateAtlasFromFile("assets/sprites.png", 16*3, 16*0, 16, 16, 1, false)
-	tileAtlaces["ARMORED_WALL"] = CreateAtlasFromFile("assets/sprites.png", 16*0, 16*1, 16, 16, 5, false)
+	tileAtlaces["ARMORED_WALL"] = CreateAtlasFromFile("assets/sprites.png", 16*0, 16*1, 16, 16, 1, false)
 	tileAtlaces["WATER"] = CreateAtlasFromFile("assets/sprites.png", 16*0, 16*3, 16, 16, 2, false)
 	tileAtlaces["WOOD"] = CreateAtlasFromFile("assets/sprites.png", 16*1, 16*2, 16, 16, 1, false)
 	tileAtlaces["ICE"] = CreateAtlasFromFile("assets/sprites.png", 16*2, 16*2, 16, 16, 1, false)

@@ -46,7 +46,7 @@ func (b *battlefield) aiWillTankMoveForward(t *tank) bool {
 		return b.areTanksEnemies(t, tankThere)
 	}
 	return b.areCoordsValid(nextX, nextY) &&
-		b.tiles[nextX][nextY].willAiDriveOn()
+		b.aiWillTankDriveOnTile(b.tileAt(nextX, nextY))
 }
 
 func (b *battlefield) aiWillTankShoot(t *tank) bool {
@@ -58,10 +58,18 @@ func (b *battlefield) aiWillTankShoot(t *tank) bool {
 	if tankThere != nil && b.areTanksEnemies(t, tankThere) {
 		return true
 	}
-	if b.tileAt(v.X, v.Y).willAiShootAt() || t == b.playerTank {
+	if b.aiWillTankShootAtTile(t, b.tileAt(v.X, v.Y)) {
 		return true
 	}
 	return false
+}
+
+func (b *battlefield) aiWillTankDriveOnTile(t *tile) bool {
+	return t.canBeDrivenOn() && !t.is(TILE_WATER)
+}
+
+func  (b *battlefield) aiWillTankShootAtTile(tnk *tank, til *tile) bool {
+	return til.isDestructible() && til.team != tnk.team
 }
 
 // Returns false if the tank was not rotated (e.g. already at coords)

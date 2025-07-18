@@ -14,9 +14,6 @@ type drawnBullet struct {
 }
 
 func (r *renderer) handleAndRenderBullets() {
-	if len(r.bullets) == 0 {
-		r.createBullets()
-	}
 	allArrived := true
 	for _, b := range r.bullets {
 		arrived := b.targetTileV.Is(b.onScreenX/TILE_SIZE_PIXELS, b.onScreenY/TILE_SIZE_PIXELS)
@@ -49,8 +46,8 @@ func (r *renderer) handleAndRenderBullets() {
 	}
 }
 
-func (r *renderer) createBullets() {
-	if r.bf.aiWillTankShoot(r.bf.playerTank) {
+func (r *renderer) createBulletsForAllTanks() {
+	if r.bf.PlayerWillTankShoot() {
 		r.createBulletForTank(r.bf.playerTank)
 	}
 	for _, t := range r.bf.tanks {

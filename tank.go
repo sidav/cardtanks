@@ -1,6 +1,9 @@
 package main
 
-import "cardtanks/calc"
+import (
+	"cardtanks/calc"
+	"math/rand"
+)
 
 const (
 	TANK1 = iota
@@ -39,6 +42,10 @@ func (t *tank) getCoords() (int, int) {
 	return t.x, t.y
 }
 
+func (t *tank) getFacing() (int, int) {
+	return t.dirX, t.dirY
+}
+
 func (t *tank) getCoordsFacingAt() (int, int) {
 	return t.x + t.dirX, t.y + t.dirY
 }
@@ -54,3 +61,11 @@ func (t *tank) rotateLeft() {
 func (t *tank) rotateRight() {
 	t.dirX, t.dirY = -t.dirY, t.dirX
 }
+
+func (t *tank) faceRandomDirection() {
+	times := rand.Intn(4)
+	for range times {
+		t.rotateRight()
+	}
+}
+
