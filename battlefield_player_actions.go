@@ -78,7 +78,7 @@ func (b *battlefield) playPlayerCard(plr *player, c *card.Card) {
 			b.getTankAt(x, y) == nil) {
 			return
 		}
-		friend := createTank(TANK1, TEAM_PLAYER, x, y)
+		friend := createTank(TANK_PLAYER, TEAM_PLAYER, x, y)
 		friend.faceRandomDirection()
 		b.tanks = append(b.tanks, friend)
 		b.state.pauseFor(300)

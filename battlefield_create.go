@@ -8,7 +8,7 @@ func createBattlefieldSkirmish(spawners, teamLimit, totalEnemies int) *battlefie
 		totalEnemyTanks: totalEnemies,
 		mission:         BFM_SKIRMISH,
 	}
-	b.playerTank = createTank(TANK1, TEAM_PLAYER, 2+rand.Intn(6), 2+rand.Intn(6))
+	b.playerTank = createTank(TANK_PLAYER, TEAM_PLAYER, 2+rand.Intn(6), 2+rand.Intn(6))
 
 	// b.placeNTilesAtRandomByAllowanceFunc(spawners, TILE_ENEMY_SPAWNER, func(x, y int) bool {
 	// 	return b.tileAt(x, y).code == TILE_FLOOR &&
@@ -61,7 +61,7 @@ func createBattlefieldCaptureFlags(spawners, teamLimit int) *battlefield {
 		totalEnemyTanks: 100,
 		mission:         BFM_CAPTURE_FLAGS,
 	}
-	b.playerTank = createTank(TANK1, TEAM_PLAYER, 2+rand.Intn(6), 2+rand.Intn(6))
+	b.playerTank = createTank(TANK_PLAYER, TEAM_PLAYER, 2+rand.Intn(6), 2+rand.Intn(6))
 
 	b.placeNTilesAtRandomByAllowanceFunc(20, TILE_WALL, func(x, y int) bool {
 		return b.tileAt(x, y).code == TILE_FLOOR && b.getTankAt(x, y) == nil
@@ -107,7 +107,7 @@ func createBattlefieldDestroyEagles(spawners, teamLimit int) *battlefield {
 		totalEnemyTanks: 100,
 		mission:         BFM_DESTROY_EAGLES,
 	}
-	b.playerTank = createTank(TANK1, TEAM_PLAYER, 2+rand.Intn(6), 2+rand.Intn(6))
+	b.playerTank = createTank(TANK_PLAYER, TEAM_PLAYER, 2+rand.Intn(6), 2+rand.Intn(6))
 
 	b.placeNTilesWithTeamAtRandomByAllowanceFunc(3, TILE_EAGLE, TEAM_ENEMY1, func(x, y int) bool {
 		return b.tileAt(x, y).code == TILE_FLOOR &&

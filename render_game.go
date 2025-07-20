@@ -13,17 +13,17 @@ func (r *renderer) renderGameState(g *game) {
 
 	switch g.state {
 	case GS_BRIEFING:
-		title, desc := g.bf.GetMissionDescription()
-		r.drawTextInRect("Mission: "+title+
-			" \n "+desc+
-			" \n Reward: "+g.currentReward.GetDescription()+
-			" \n Press ENTER to continue", 50, 50, 800, 25, rl.White)
+		title, desc := g.bf.GetMissionBriefing()
+		r.drawTextInRect("     Operation: "+title+
+			"\n\n"+desc+
+			"\n\nReward: "+g.currentReward.GetDescription()+
+			"\nPress ENTER to continue", 50, 50, 800, 25, rl.White)
 	case GS_BATTLEFIELD:
 		r.renderBattlefield(g.bf, g.plr)
 	case GS_SELECT_REWARD:
 		r.renderRewardScreen(g)
 	case GS_GAMEOVER:
-		r.drawTextInRect("GAME OVER \n press ESC to exit game", 50, 50, 800, 25, rl.Red)
+		r.drawTextInRect("GAME OVER\npress ESC to exit game", 50, 50, 800, 25, rl.Red)
 	}
 
 	rl.EndDrawing()

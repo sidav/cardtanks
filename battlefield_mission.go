@@ -14,19 +14,52 @@ const (
 	BFM_MISSIONS_COUNT
 )
 
-func (b *battlefield) GetMissionDescription() (missTitle, missDescr string) {
+const (
+	MISSION_FLAGS_TO_CAPTURE  = 3
+	MISSION_EAGLES_TO_DESTROY = 3
+)
+
+func (b *battlefield) GetMissionBriefing() (missTitle, missDescr string) {
 	switch b.mission {
 	case BFM_SKIRMISH:
 		missTitle = "Skirmish"
-		missDescr = fmt.Sprintf("Destroy %d enemy tanks to win", b.totalEnemyTanks+b.countTanksOfTeam(TEAM_ENEMY1))
+		missDescr = fmt.Sprintf(
+			"Destroy %d enemy tanks to win\n"+
+				"Max %d enemies will appear at the same time",
+			b.totalEnemyTanks+b.countTanksOfTeam(TEAM_ENEMY1), b.maxTanksPerTeam)
 	case BFM_CAPTURE_FLAGS:
 		missTitle = "Race for the flags"
-		missDescr = "Capture 3 flags to win"
+		missDescr = fmt.Sprintf(
+			"Capture %d flags to win\n"+
+				"Max %d enemies will appear at the same time",
+			MISSION_FLAGS_TO_CAPTURE, b.maxTanksPerTeam)
 	case BFM_DESTROY_EAGLES:
 		missTitle = "One-tank army"
-		missDescr = "Destroy 3 enemy bases to win. Enemy receives more reinforcements after each base gets destroyed!"
+		missDescr = fmt.Sprintf(
+			"Destroy %d enemy eagles to win\n"+
+				"Max %d enemies will appear at the same time, and +1 for each destroyed eagle",
+			MISSION_EAGLES_TO_DESTROY, b.maxTanksPerTeam)
+	}
+	if b.spawnFastEnemies {
+		missDescr += "\n\n Fast tanks may appear!"
+	}
+	if b.spawnArmoredEnemies {
+		missDescr += "\n\n Armored tanks may appear!"
 	}
 	return
+}
+
+func (b *battlefield) GetMissionProgressString() string {
+	switch b.mission {
+	case BFM_SKIRMISH:
+		return fmt.Sprintf(
+			"%d tanks left to destroy", b.totalEnemyTanks+b.countTanksOfTeam(TEAM_ENEMY1))
+	case BFM_CAPTURE_FLAGS:
+		return fmt.Sprintf("%d/%d flags taken", b.missionProgress, MISSION_FLAGS_TO_CAPTURE)
+	case BFM_DESTROY_EAGLES:
+		return fmt.Sprintf("%d eagles left to destroy", b.countTilesOfType(TILE_EAGLE))
+	}
+	return "No description"
 }
 
 func (b *battlefield) doMissionSpecificCheck() {
@@ -45,7 +78,7 @@ func (b *battlefield) doMissionSpecificCheck() {
 		}
 	case BFM_DESTROY_EAGLES:
 		b.maxTanksPerTeam -= b.missionProgress
-		b.missionProgress = 3 - b.countTilesOfType(TILE_EAGLE)
+		b.missionProgress = MISSION_EAGLES_TO_DESTROY - b.countTilesOfType(TILE_EAGLE)
 		b.maxTanksPerTeam += b.missionProgress
 	}
 }
@@ -55,7 +88,7 @@ func (b *battlefield) IsMissionWon() bool {
 	case BFM_SKIRMISH:
 		return b.totalEnemyTanks+b.countTanksOfTeam(TEAM_ENEMY1)+b.countTanksOfTeam(TEAM_ENEMY2)+b.countTanksOfTeam(TEAM_ENEMY3) == 0
 	case BFM_CAPTURE_FLAGS:
-		return b.missionProgress == 3
+		return b.missionProgress == MISSION_FLAGS_TO_CAPTURE
 	case BFM_DESTROY_EAGLES:
 		return b.countTilesOfType(TILE_EAGLE) == 0
 	}

@@ -22,8 +22,8 @@ var MulliganButton = image.Rect(0, WINDOW_H-100, 150, WINDOW_H)
 
 func (r *renderer) renderBattlefieldInfo() {
 	bfW := len(r.bf.tiles) * TILE_SIZE_PIXELS
-	r.drawString(fmt.Sprintf("Current phase: %s", r.bf.state.currentStateName()), int32(bfW + 4), 4, 24, rl.White)
-	r.drawString(fmt.Sprintf("Enemies remaining %d", r.bf.totalEnemyTanks), int32(bfW + 4), 30, 24, rl.White)
+	r.drawString(fmt.Sprintf("Current phase: %s", r.bf.state.currentStateName()), int32(bfW+4), 4, 24, rl.White)
+	r.drawString(r.bf.GetMissionProgressString(), int32(bfW+4), 30, 24, rl.White)
 }
 
 func (r *renderer) renderButtons() {
@@ -33,9 +33,9 @@ func (r *renderer) renderButtons() {
 		color = rl.Yellow
 	}
 	rl.DrawRectangleLinesEx(r.imgRectangeToRlRectangle(MulliganButton), 2, color)
-	r.drawString(fmt.Sprintf("Deck (%d)", r.plr.deck.Size()), int32(MulliganButton.Min.X + 2), int32(MulliganButton.Min.Y+2), 18, color)
+	r.drawString(fmt.Sprintf("Deck (%d)", r.plr.deck.Size()), int32(MulliganButton.Min.X+2), int32(MulliganButton.Min.Y+2), 18, color)
 	if r.bf.canPlayerMulligan(r.plr) {
-		r.drawString("Press to mulligan", int32(MulliganButton.Min.X+2), int32(MulliganButton.Min.Y + 22), 16, color)
+		r.drawString("Press to mulligan", int32(MulliganButton.Min.X+2), int32(MulliganButton.Min.Y+22), 16, color)
 	}
 
 	// End turn button
@@ -78,7 +78,7 @@ func (r *renderer) renderCardAt(c *card.Card, x, y int, considerBfPlayability bo
 	)
 	r.drawString(fmt.Sprintf("(%d) %s", c.ActionsCost, c.Title),
 		int32(x), int32(y), 18, color)
-	r.drawTextInRect(c.GetDescription(), float32(x+1), float32(y + 22), CARD_W, 16, color)
+	r.drawTextInRect(c.GetDescription(), float32(x+1), float32(y+22), CARD_W, 16, color)
 }
 
 func (r *renderer) drawString(text string, x, y, size int32, color rl.Color) {
@@ -86,22 +86,25 @@ func (r *renderer) drawString(text string, x, y, size int32, color rl.Color) {
 }
 
 func (r *renderer) drawTextInRect(text string, x, y, w, fontSize float32, color rl.Color) {
-	spaceWidth := fontSize/2
-	lineMargin := fontSize/5
-	splittedText := strings.Split(text, " ")
+	spaceWidth := fontSize / 2
+	lineMargin := fontSize / 5
 	var currX float32 = 0
 	var currY float32 = y
-	for _, word := range splittedText {
-		measure := rl.MeasureTextEx(defaultFont, word, fontSize, 0)
-		wordWidth := measure.X
-		if currX + wordWidth > w || word == "\\n" || word == "\n" {
-			currX = 0.0
-			currY += fontSize + lineMargin
-		}
-		if word != "\\n" && word != "\n" {
-			rl.DrawTextEx(defaultFont, word, rl.Vector2{currX+x, currY}, fontSize, 0, color)
+	newlineSplittedText := strings.Split(text, "\n")
+	for _, line := range newlineSplittedText {
+		spaceSplittedText := strings.Split(line, " ")
+		for _, word := range spaceSplittedText {
+			measure := rl.MeasureTextEx(defaultFont, word, fontSize, 0)
+			wordWidth := measure.X
+			if currX+wordWidth > w {
+				currX = 0.0
+				currY += fontSize + lineMargin
+			}
+			rl.DrawTextEx(defaultFont, word, rl.Vector2{currX + x, currY}, fontSize, 0, color)
 			currX += wordWidth + spaceWidth
 		}
+		currX = 0.0
+		currY += fontSize + lineMargin
 	}
 }
 

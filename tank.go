@@ -6,7 +6,10 @@ import (
 )
 
 const (
-	TANK1 = iota
+	TANK_PLAYER = iota
+	TANK_ENEMY
+	TANK_ENEMY_FAST
+	TANK_ENEMY_ARMORED
 )
 
 type tank struct {
@@ -16,26 +19,46 @@ type tank struct {
 
 	// This is a vector of last movement, regardless of current facing and the reason of the movement.
 	// May be useful for e.g. ice logic
-	lastMoveVector calc.IntVector2d
+	lastMoveVector      calc.IntVector2d
+	madeActionsThisTurn int
 
-	x, y   int
-	health int
+	x, y              int
+	health            int
+	additionalActions int // Makes (player actions this turn) + this value
 
 	justSpawned bool // For the renderer; no gameplay effect
 }
 
 func createTank(code, team byte, x, y int) *tank {
 	t := &tank{
-		code: code,
-		team: team,
-		x:    x,
-		y:    y,
-		dirX: 0,
-		dirY: -1,
+		code:        code,
+		team:        team,
+		x:           x,
+		y:           y,
+		dirX:        0,
+		dirY:        -1,
+		health:      1,
+		justSpawned: true,
 	}
-	t.health = 1
-	t.justSpawned = true
+	switch code {
+	case TANK_ENEMY_FAST:
+		t.additionalActions = 1
+	case TANK_ENEMY_ARMORED:
+		t.health = 1
+	}
 	return t
+}
+
+func (t *tank) getSpriteAtlas() *spriteAtlas {
+	switch t.code {
+	case TANK_ENEMY:
+		return tankAtlaces["TANK5"]
+	case TANK_ENEMY_FAST:
+		return tankAtlaces["TANK6"]
+	case TANK_ENEMY_ARMORED:
+		return tankAtlaces["TANK7"]
+	}
+	return tankAtlaces["TANK1"]
 }
 
 func (t *tank) getCoords() (int, int) {
@@ -48,10 +71,6 @@ func (t *tank) getFacing() (int, int) {
 
 func (t *tank) getCoordsFacingAt() (int, int) {
 	return t.x + t.dirX, t.y + t.dirY
-}
-
-func (t *tank) getSpriteAtlas() *spriteAtlas {
-	return tankAtlaces["TANK1"]
 }
 
 func (t *tank) rotateLeft() {
@@ -68,4 +87,3 @@ func (t *tank) faceRandomDirection() {
 		t.rotateRight()
 	}
 }
-

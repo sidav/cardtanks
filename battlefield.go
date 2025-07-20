@@ -10,7 +10,7 @@ const (
 	BF_HEIGHT      = 10
 	TEAM_NONE      = 0
 	TEAM_PLAYER    = 1
-	TEAM_ENEMY1     = 2
+	TEAM_ENEMY1    = 2
 	TEAM_ENEMY2    = 3
 	TEAM_ENEMY3    = 4
 	MAX_TEAM_CONST = 5 // needed for random team assignment
@@ -22,10 +22,12 @@ type battlefield struct {
 	playerTank *tank
 	tanks      []*tank
 
-	mission         battlefieldMissionId
-	missionProgress int // general-purpose integer
-	maxTanksPerTeam int
-	totalEnemyTanks int
+	mission             battlefieldMissionId
+	missionProgress     int // general-purpose integer
+	maxTanksPerTeam     int
+	totalEnemyTanks     int
+	spawnFastEnemies    bool
+	spawnArmoredEnemies bool
 }
 
 func (b *battlefield) tileAt(x, y int) *tile {
@@ -224,13 +226,18 @@ func (b *battlefield) trySpawnNewEnemy() bool {
 	if v == nil {
 		return false
 	}
-	b.totalEnemyTanks--
-	newTank := createTank(TANK1, TEAM_ENEMY1, v.X, v.Y)
-	rotateTimes := rand.Intn(4)
-	for range rotateTimes {
-		newTank.rotateRight()
+	var newTankCode byte = TANK_ENEMY
+	if b.spawnFastEnemies && rand.Intn(100) < 33 {
+		newTankCode = TANK_ENEMY_FAST
+	} else if b.spawnArmoredEnemies && rand.Intn(100) < 33 {
+		newTankCode = TANK_ENEMY_ARMORED
 	}
+
+	newTank := createTank(newTankCode, TEAM_ENEMY1, v.X, v.Y)
+	newTank.faceRandomDirection()
 	b.tanks = append(b.tanks, newTank)
+
+	b.totalEnemyTanks--
 	return true
 }
 

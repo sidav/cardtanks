@@ -38,9 +38,11 @@ func (b *battlefield) actOnState(plr *player) {
 		if st.msElapsed(200) {
 			b.clearDestroyedTanks()
 			moved := b.tryPushingTankByVector(b.playerTank, st.intentVector.X, st.intentVector.Y)
+			b.trySinkingTanks()
 			st.actionsRemaining--
 			st.resetTime()
-			if moved {
+			sunken := b.trySinkingTanks()
+			if moved || sunken {
 				st.pauseFor(200)
 			}
 		}
@@ -58,14 +60,16 @@ func (b *battlefield) actOnState(plr *player) {
 
 	case BS_PLAYER_ENDED_TURN:
 		st.currentEntityNumber = 0
-		st.actionsRemaining = plr.actionsSpentForTurn
 		st.switchTo(BS_NONPLAYER_TANK_MOVES)
 
 	case BS_NONPLAYER_TANK_MOVES:
-		if plr.actionsSpentForTurn == 0 {
-			st.switchTo(BS_SHOOT)
+		if st.currentEntityNumber >= len(b.tanks) {
+			if st.msElapsed(300) {
+				st.switchTo(BS_SHOOT)
+			}
 			return
 		}
+		currTank := b.tanks[st.currentEntityNumber]
 		b.clearDestroyedTanks()
 		if b.areAnyTanksOnIce() {
 			anythingPushed := b.tryPushingAllTanksOnIce()
@@ -74,18 +78,13 @@ func (b *battlefield) actOnState(plr *player) {
 				return
 			}
 		}
-		if st.actionsRemaining == 0 {
+		if currTank.madeActionsThisTurn >= plr.actionsSpentForTurn + currTank.additionalActions {
 			st.currentEntityNumber++
-			st.actionsRemaining = plr.actionsSpentForTurn
-		}
-		if st.currentEntityNumber >= len(b.tanks) {
-			if st.msElapsed(300) {
-				st.switchTo(BS_SHOOT)
-			}
 			return
 		}
-		b.actForNonplayerTank(b.tanks[st.currentEntityNumber])
-		st.actionsRemaining--
+
+		b.actForNonplayerTank(currTank)
+		currTank.madeActionsThisTurn++
 		st.resetTime()
 		b.trySinkingTanks()
 		st.pauseFor(250)
@@ -165,7 +164,9 @@ func (b *battlefield) doShootingForTank(t *tank, plr *player) {
 func (b *battlefield) doBeginningOfTurnCleanup(plr *player) {
 	plr.actionsSpentForTurn = 0
 	b.cleanJustSpawnedStatuses()
-
+	for _, t := range b.tanks {
+		t.madeActionsThisTurn = 0
+	}
 }
 
 func (b *battlefield) cleanJustSpawnedStatuses() {

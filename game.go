@@ -29,9 +29,9 @@ type game struct {
 
 func NewGame() *game {
 	g := &game{
-		state: GS_SELECT_REWARD,
-		plr:   newPlayer(),
-		r:     &renderer{},
+		state:         GS_SELECT_REWARD,
+		plr:           newPlayer(),
+		r:             &renderer{},
 		currentReward: GenerateNewReward(),
 	}
 	return g
@@ -72,6 +72,8 @@ func (g *game) selectBattle() {
 	default:
 		panic("No mission implementation")
 	}
+	g.bf.spawnFastEnemies = rand.Intn(4) <= g.wonMissions
+	g.bf.spawnArmoredEnemies = rand.Intn(5) <= g.wonMissions
 	// Generate reward
 	g.currentReward = GenerateNewReward()
 }

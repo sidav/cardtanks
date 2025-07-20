@@ -9,7 +9,7 @@ type Card struct {
 
 func (c *Card) GetDescription() string {
 	if c.ExhaustedOnUse {
-		return c.description + " \n Exhaust."
+		return c.description + "\nExhaust."
 	}
 	return c.description
 }
