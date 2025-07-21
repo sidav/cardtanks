@@ -11,6 +11,7 @@ const (
 	BFM_SKIRMISH battlefieldMissionId = iota
 	BFM_CAPTURE_FLAGS
 	BFM_DESTROY_EAGLES
+	BFM_LAST_TANK_STANDING
 	BFM_BOSS_FIGHT
 	BFM_MISSIONS_COUNT
 )
@@ -40,6 +41,13 @@ func (b *battlefield) GetMissionBriefing() (missTitle, missDescr string) {
 			"Destroy %d enemy eagles to win\n"+
 				"Max %d enemies will appear at the same time, and +1 for each destroyed eagle",
 			MISSION_EAGLES_TO_DESTROY, b.maxTanksPerTeam)
+	case BFM_LAST_TANK_STANDING:
+		missTitle = "King of the hill"
+		missDescr = fmt.Sprintf(
+			"You are at the center of a huge combat of several factions. "+
+				"%d tanks will obliterate each other on this land.\nBe the last one alive!\n"+
+				"Max %d enemies per faction will appear at the same time",
+			b.totalEnemyTanks+b.countEnemyTanksOfAnyTeam(), b.maxTanksPerTeam)
 	case BFM_BOSS_FIGHT:
 		missTitle = "Overlord"
 		missDescr = fmt.Sprintf(
@@ -60,13 +68,16 @@ func (b *battlefield) GetMissionProgressString() string {
 	switch b.mission {
 	case BFM_SKIRMISH:
 		return fmt.Sprintf(
-			"%d tanks left to destroy", b.totalEnemyTanks+b.countTanksOfTeam(TEAM_ENEMY1))
+			"%d tanks left to destroy", b.totalEnemyTanks+b.countEnemyTanksOfAnyTeam())
 	case BFM_CAPTURE_FLAGS:
 		return fmt.Sprintf("%d/%d flags taken", b.missionProgress, MISSION_FLAGS_TO_CAPTURE)
 	case BFM_DESTROY_EAGLES:
 		return fmt.Sprintf("%d eagles left to destroy", b.countTilesOfType(TILE_EAGLE))
 	case BFM_BOSS_FIGHT:
 		return fmt.Sprintf("Boss health: %d/%d", b.enemyBossTank.health, b.enemyBossTank.GetMaxHealth())
+	case BFM_LAST_TANK_STANDING:
+		return fmt.Sprintf(
+			"%d tanks left", b.totalEnemyTanks+b.countEnemyTanksOfAnyTeam())
 	}
 	return "No description"
 }
@@ -98,8 +109,8 @@ func (b *battlefield) doMissionSpecificCheck() {
 
 func (b *battlefield) IsMissionWon() bool {
 	switch b.mission {
-	case BFM_SKIRMISH:
-		return b.totalEnemyTanks+b.countTanksOfTeam(TEAM_ENEMY1)+b.countTanksOfTeam(TEAM_ENEMY2)+b.countTanksOfTeam(TEAM_ENEMY3) == 0
+	case BFM_SKIRMISH, BFM_LAST_TANK_STANDING:
+		return b.totalEnemyTanks+b.countEnemyTanksOfAnyTeam() == 0
 	case BFM_CAPTURE_FLAGS:
 		return b.missionProgress == MISSION_FLAGS_TO_CAPTURE
 	case BFM_DESTROY_EAGLES:

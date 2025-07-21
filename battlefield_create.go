@@ -2,7 +2,7 @@ package main
 
 import "math/rand"
 
-func createBattlefieldSkirmish(spawners, teamLimit, totalEnemies int) *battlefield {
+func createBattlefieldSkirmish(teamLimit, totalEnemies int) *battlefield {
 	b := &battlefield{
 		maxTanksPerTeam: teamLimit,
 		totalEnemyTanks: totalEnemies,
@@ -12,12 +12,12 @@ func createBattlefieldSkirmish(spawners, teamLimit, totalEnemies int) *battlefie
 	b.randomlyFillMapWithBasicTiles()
 
 	for range teamLimit {
-		b.trySpawnNewEnemy()
+		b.trySpawnNewEnemy(TEAM_ENEMY1)
 	}
 	return b
 }
 
-func createBattlefieldCaptureFlags(spawners, teamLimit int) *battlefield {
+func createBattlefieldCaptureFlags(teamLimit int) *battlefield {
 	b := &battlefield{
 		maxTanksPerTeam: teamLimit,
 		totalEnemyTanks: 1000,
@@ -28,12 +28,12 @@ func createBattlefieldCaptureFlags(spawners, teamLimit int) *battlefield {
 	b.randomlyFillMapWithBasicTiles()
 
 	for range teamLimit {
-		b.trySpawnNewEnemy()
+		b.trySpawnNewEnemy(TEAM_ENEMY1)
 	}
 	return b
 }
 
-func createBattlefieldDestroyEagles(spawners, teamLimit int) *battlefield {
+func createBattlefieldDestroyEagles(teamLimit int) *battlefield {
 	b := &battlefield{
 		maxTanksPerTeam: teamLimit,
 		totalEnemyTanks: 1000,
@@ -51,7 +51,7 @@ func createBattlefieldDestroyEagles(spawners, teamLimit int) *battlefield {
 	b.randomlyFillMapWithBasicTiles()
 
 	for range teamLimit {
-		b.trySpawnNewEnemy()
+		b.trySpawnNewEnemy(TEAM_ENEMY1)
 	}
 	return b
 }
@@ -77,7 +77,24 @@ func createBattlefieldBossFight(teamLimit int) *battlefield {
 	b.tanks = append(b.tanks, b.enemyBossTank)
 
 	for range teamLimit {
-		b.trySpawnNewEnemy()
+		b.trySpawnNewEnemy(TEAM_ENEMY1)
+	}
+	return b
+}
+
+func createBattlefieldLastTankStanding(teamLimit, totalEnemyTanks int) *battlefield {
+	b := &battlefield{
+		maxTanksPerTeam: teamLimit,
+		totalEnemyTanks: totalEnemyTanks,
+		mission:         BFM_LAST_TANK_STANDING,
+	}
+	b.playerTank = createTank(TANK_PLAYER, TEAM_PLAYER, 2+rand.Intn(6), 2+rand.Intn(6))
+	b.randomlyFillMapWithBasicTiles()
+	b.maxActiveEnemyTeam = TEAM_ENEMY3
+	for team := TEAM_ENEMY1; team <= b.maxActiveEnemyTeam; team++ {
+		for range teamLimit {
+			b.trySpawnNewEnemy(team)
+		}
 	}
 	return b
 }

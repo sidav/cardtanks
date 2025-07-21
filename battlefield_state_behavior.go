@@ -110,10 +110,15 @@ func (b *battlefield) actOnState(plr *player) {
 		st.switchTo(BS_SPAWN_NEW_ENEMIES)
 
 	case BS_SPAWN_NEW_ENEMIES:
-		enemiesToSpawn := b.maxTanksPerTeam - b.countTanksOfTeam(TEAM_ENEMY1)
-		enemiesToSpawn = min(enemiesToSpawn, b.totalEnemyTanks)
-		for range enemiesToSpawn {
-			b.trySpawnNewEnemy()
+		if b.maxActiveEnemyTeam == 0 {
+			b.maxActiveEnemyTeam = TEAM_ENEMY1
+		}
+		for team := TEAM_ENEMY1; team <= b.maxActiveEnemyTeam; team++ {
+			enemiesToSpawn := b.maxTanksPerTeam - b.countTanksOfTeam(team)
+			enemiesToSpawn = min(enemiesToSpawn, b.totalEnemyTanks)
+			for range enemiesToSpawn {
+				b.trySpawnNewEnemy(team)
+			}
 		}
 		st.switchTo(BS_BEFORE_PLAYER_TURN)
 
@@ -158,9 +163,8 @@ func (b *battlefield) doShootingForTank(t *tank, plr *player) {
 	if hitTank != nil {
 		if b.playerTank == hitTank {
 			b.handlePlayerBeingHit(plr)
-		} else {
-			hitTank.health--
 		}
+		hitTank.health--
 		return
 	}
 	b.tiles[x][y].destroy()

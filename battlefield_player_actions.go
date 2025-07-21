@@ -21,8 +21,6 @@ func (b *battlefield) playPlayerCard(plr *player, c *card.Card) {
 	case card.CARD_ROTAROUND:
 		b.playerTank.rotateLeft()
 		b.playerTank.rotateLeft()
-	case card.CARD_WAIT:
-		// Nothing
 	case card.CARD_MOV1:
 		b.state.switchTo(BS_PLAYER_MOVES)
 		b.state.intentVector.SetEqTo(b.playerTank.getFacing())
@@ -53,15 +51,17 @@ func (b *battlefield) playPlayerCard(plr *player, c *card.Card) {
 		b.state.actionsRemaining = 1
 
 	case card.CARD_INSTANTSHOOT:
-		b.state.switchTo(BS_PLAYER_SHOOTS_DURING_TURN)
-
-	case card.CARD_DRAWCARD:
-		if plr.hand.Size() >= plr.maxHandSize {
+		trg := b.getHitCoordinatesIfTankFires(pTank)
+		if trg == nil {
 			return
 		}
-		for plr.hand.Size() < plr.maxHandSize {
-			plr.drawCard()
+		b.state.switchTo(BS_PLAYER_SHOOTS_DURING_TURN)
+
+	case card.CARD_DRAWCARD_AND_REPAIR:
+		if plr.hand.Size() >= plr.maxHandSize && b.playerTank.health >= b.playerTank.GetMaxHealth() {
+			return
 		}
+		plr.drawCard()
 		plr.actionsSpentForTurn += c.ActionsCost
 		plr.cardsPlayedThisTurn++
 		if c.ExhaustedOnUse {
@@ -87,6 +87,10 @@ func (b *battlefield) playPlayerCard(plr *player, c *card.Card) {
 		x, y := pTank.getCoords()
 		for i := x - 1; i <= x+1; i++ {
 			for j := y - 1; j <= y+1; j++ {
+				fx, fy := pTank.getCoordsFacingAt()
+				if fx == i && fy == j {
+					continue
+				}
 				if b.areCoordsValid(i, j) && b.getTankAt(i, j) == nil {
 					if b.tileAt(i, j).isOneOf(TILE_FLOOR, TILE_WATER, TILE_DAMAGED_WALL) {
 						b.tileAt(i, j).spawnAs(TILE_WALL)
@@ -96,13 +100,13 @@ func (b *battlefield) playPlayerCard(plr *player, c *card.Card) {
 		}
 		b.state.pauseFor(300)
 
-	case card.CARD_ROTATE_EVERYONE_RANDOMLY:
-		b.playerTank.faceRandomDirection()
-		b.playerTank.justSpawned = true
-		for _, t := range b.tanks {
-			t.faceRandomDirection()
-			t.justSpawned = true
+	case card.CARD_PUSH_AND_ROTATE:
+		target := b.getHitTankIfTankFires(pTank)
+		if target == nil {
+			return
 		}
+		b.tryPushingTankByVector(target, pTank.dirX, pTank.dirY)
+		target.faceRandomDirection()
 		b.state.pauseFor(300)
 
 	case card.CARD_ASSIGN_RANDOM_TEAMS:
@@ -112,9 +116,9 @@ func (b *battlefield) playPlayerCard(plr *player, c *card.Card) {
 			}
 			newTeam := TEAM_PLAYER
 			for newTeam == TEAM_PLAYER || newTeam == TEAM_NONE {
-				newTeam = rand.Intn(MAX_TEAM_CONST)
+				newTeam = byte(rand.Intn(int(MAX_TEAM_CONST)))
 			}
-			t.team = byte(newTeam)
+			t.team = newTeam
 			t.justSpawned = true
 		}
 		b.state.pauseFor(300)
@@ -136,6 +140,40 @@ func (b *battlefield) playPlayerCard(plr *player, c *card.Card) {
 		}
 		b.playerTank.justSpawned = true
 		b.playerTank.x, b.playerTank.y = v.Unwrap()
+		b.state.pauseFor(300)
+
+	case card.CARD_TELEPORT_BEHIND:
+		target := b.getHitTankIfTankFires(pTank)
+		if target == nil {
+			return
+		}
+		x, y := target.getCoords()
+		x -= target.dirX
+		y -= target.dirY
+		if b.areCoordsValid(x, y) && b.getTankAt(x, y) == nil &&
+			b.tileAt(x, y).isOneOf(TILE_FLOOR, TILE_ICE, TILE_FOREST) {
+			pTank.x, pTank.y = x, y
+			pTank.justSpawned = true
+		}
+		b.state.pauseFor(300)
+
+	case card.CARD_GROW_FOREST:
+		if b.tileAt(pTank.getCoords()).is(TILE_FLOOR) {
+			b.tileAt(pTank.getCoords()).spawnAs(TILE_FOREST)
+			b.state.pauseFor(300)
+		} else {
+			return
+		}
+
+	case card.CARD_REMOVE_WALL:
+		v := b.getHitCoordinatesIfTankFires(pTank)
+		if v == nil {
+			return
+		}
+		if !b.tileAt(v.Unwrap()).isOneOf(TILE_WALL, TILE_DAMAGED_WALL, TILE_ARMOR) {
+			return
+		}
+		b.tileAt(v.Unwrap()).spawnAs(TILE_FLOOR)
 		b.state.pauseFor(300)
 
 	case card.CARD_UNEXHAUST_OTHER_CARDS:
@@ -191,7 +229,7 @@ func (b *battlefield) handlePlayerEndTurn(plr *player) {
 	b.state.switchTo(BS_PLAYER_ENDED_TURN)
 }
 
-const CARDS_DROPPED_ON_HIT = 2
+const CARDS_DROPPED_ON_HIT = 1
 
 func (b *battlefield) handlePlayerBeingHit(plr *player) {
 	if plr.hand.Size() > CARDS_DROPPED_ON_HIT {

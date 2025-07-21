@@ -64,11 +64,13 @@ func (g *game) selectBattle() {
 	mission := rand.Intn(int(BFM_MISSIONS_COUNT))
 	switch battlefieldMissionId(mission) {
 	case BFM_SKIRMISH:
-		g.bf = createBattlefieldSkirmish(0, 3+g.wonMissions/2, 5+g.wonMissions)
+		g.bf = createBattlefieldSkirmish(3+g.wonMissions/2, 5+g.wonMissions)
 	case BFM_CAPTURE_FLAGS:
-		g.bf = createBattlefieldCaptureFlags(0, 3+g.wonMissions/2)
+		g.bf = createBattlefieldCaptureFlags(3+g.wonMissions/2)
 	case BFM_DESTROY_EAGLES:
-		g.bf = createBattlefieldDestroyEagles(0, 3+g.wonMissions/2)
+		g.bf = createBattlefieldDestroyEagles(3+g.wonMissions/2)
+	case BFM_LAST_TANK_STANDING:
+		g.bf = createBattlefieldLastTankStanding(2+g.wonMissions/2, 10+g.wonMissions)
 	case BFM_BOSS_FIGHT:
 		g.bf = createBattlefieldBossFight(3 + g.wonMissions/2)
 	default:

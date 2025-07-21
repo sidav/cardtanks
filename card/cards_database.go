@@ -9,7 +9,6 @@ const (
 	CARD_ROTLEFT CardId = iota
 	CARD_ROTRIGHT
 	CARD_ROTAROUND
-	CARD_WAIT
 	CARD_MOV1
 	CARD_MOV2
 	CARD_MOV3
@@ -17,12 +16,15 @@ const (
 	CARD_MOVLEFT
 	CARD_MOVRIGHT
 	CARD_INSTANTSHOOT
-	CARD_DRAWCARD
+	CARD_DRAWCARD_AND_REPAIR
 	CARD_FRIENDLYTANK
 	CARD_BUILD_WALLS_AROUND
-	CARD_ROTATE_EVERYONE_RANDOMLY
+	CARD_PUSH_AND_ROTATE
 	CARD_ASSIGN_RANDOM_TEAMS
 	CARD_SAFE_TELEPORT
+	CARD_TELEPORT_BEHIND
+	CARD_GROW_FOREST
+	CARD_REMOVE_WALL
 	CARD_UNEXHAUST_OTHER_CARDS
 	TOTAL_CARDS
 )
@@ -50,11 +52,6 @@ func CreateCardById(id CardId) *Card {
 		c = &Card{
 			Title: "Turn around",
 		}
-	case CARD_WAIT:
-		c = &Card{
-			ActionsCost: 2,
-			Title:       "Wait a while",
-		}
 	case CARD_MOV1:
 		c = &Card{
 			ActionsCost: 1,
@@ -72,13 +69,13 @@ func CreateCardById(id CardId) *Card {
 		}
 	case CARD_MOVLEFT:
 		c = &Card{
-			ActionsCost: 1,
+			ActionsCost: 0,
 			Title:       "Left sidestep",
 			description: "Move left without turning",
 		}
 	case CARD_MOVRIGHT:
 		c = &Card{
-			ActionsCost: 1,
+			ActionsCost: 0,
 			Title:       "Right sidestep",
 			description: "Move right without turning",
 		}
@@ -89,11 +86,11 @@ func CreateCardById(id CardId) *Card {
 			description:    "Shoot right now without ending your turn.",
 			ExhaustedOnUse: true,
 		}
-	case CARD_DRAWCARD:
+	case CARD_DRAWCARD_AND_REPAIR:
 		c = &Card{
-			ActionsCost: 3,
-			Title:       "Quick repair",
-			description: "If damaged, draw full hand and end your turn.",
+			ActionsCost:    3,
+			Title:          "Quick repair",
+			description:    "If damaged, repair 1 health, draw a card and end your turn.",
 			ExhaustedOnUse: true,
 		}
 	case CARD_FRIENDLYTANK:
@@ -107,20 +104,21 @@ func CreateCardById(id CardId) *Card {
 		c = &Card{
 			ActionsCost:    3,
 			Title:          "Bunker",
-			description:    "Build/repair walls around you.",
+			description:    "Build/repair walls around you, except the tile you're looking at",
 			ExhaustedOnUse: true,
 		}
-	case CARD_ROTATE_EVERYONE_RANDOMLY:
+	case CARD_PUSH_AND_ROTATE:
 		c = &Card{
-			ActionsCost: 1,
-			Title:       "Short circuit",
-			description: "Rotate all tanks (including you) randomly.",
+			ActionsCost:    0,
+			Title:          "Telekinesis",
+			description:    "Push and randomly rotate the tank you're looking at",
+			ExhaustedOnUse: true,
 		}
 	case CARD_ASSIGN_RANDOM_TEAMS:
 		c = &Card{
 			ActionsCost:    3,
 			Title:          "Mayhem",
-			description:    "Assign random teams to all tanks (excluding you).",
+			description:    "Assign random teams to most tanks.",
 			ExhaustedOnUse: true,
 		}
 	case CARD_UNEXHAUST_OTHER_CARDS:
@@ -133,8 +131,29 @@ func CreateCardById(id CardId) *Card {
 	case CARD_SAFE_TELEPORT:
 		c = &Card{
 			ActionsCost:    2,
-			Title:          "Runaway",
+			Title:          "Evacuate",
 			description:    "Try to teleport to a safe place.",
+			ExhaustedOnUse: true,
+		}
+	case CARD_TELEPORT_BEHIND:
+		c = &Card{
+			ActionsCost:    0,
+			Title:          "Sneak attack",
+			description:    "Teleport behind the tank you're looking at",
+			ExhaustedOnUse: true,
+		}
+	case CARD_GROW_FOREST:
+		c = &Card{
+			ActionsCost:    2,
+			Title:          "Foliage camo",
+			description:    "Grow a forest on your position",
+			ExhaustedOnUse: true,
+		}
+	case CARD_REMOVE_WALL:
+		c = &Card{
+			ActionsCost:    0,
+			Title:          "Unbuild",
+			description:    "Remove any wall you're looking at (works even with armor)",
 			ExhaustedOnUse: true,
 		}
 	default:

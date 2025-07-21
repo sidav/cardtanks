@@ -6,14 +6,14 @@ import (
 )
 
 const (
-	BF_WIDTH       = 12
-	BF_HEIGHT      = 10
-	TEAM_NONE      = 0
-	TEAM_PLAYER    = 1
-	TEAM_ENEMY1    = 2
-	TEAM_ENEMY2    = 3
-	TEAM_ENEMY3    = 4
-	MAX_TEAM_CONST = 5 // needed for random team assignment
+	BF_WIDTH            = 12
+	BF_HEIGHT           = 10
+	TEAM_NONE           = 0
+	TEAM_PLAYER    byte = 1
+	TEAM_ENEMY1    byte = 2
+	TEAM_ENEMY2    byte = 3
+	TEAM_ENEMY3    byte = 4
+	MAX_TEAM_CONST byte = 5 // needed for random team assignment
 )
 
 type battlefield struct {
@@ -25,6 +25,7 @@ type battlefield struct {
 
 	mission             battlefieldMissionId
 	missionProgress     int // general-purpose integer
+	maxActiveEnemyTeam  byte
 	maxTanksPerTeam     int
 	totalEnemyTanks     int
 	spawnFastEnemies    bool
@@ -76,6 +77,16 @@ func (b *battlefield) countTanksOfTeam(team byte) int {
 	return count
 }
 
+func (b *battlefield) countEnemyTanksOfAnyTeam() int {
+	count := 0
+	for _, t := range b.tanks {
+		if t.team != TEAM_NONE && t.team != TEAM_PLAYER {
+			count++
+		}
+	}
+	return count
+}
+
 func (b *battlefield) areTanksEnemies(t1, t2 *tank) bool {
 	return t1.team != t2.team
 }
@@ -98,6 +109,14 @@ func (b *battlefield) getHitCoordinatesIfTankFires(t *tank) *calc.IntVector2d {
 		}
 	}
 	return nil
+}
+
+func (b *battlefield) getHitTankIfTankFires(t *tank) *tank {
+	v := b.getHitCoordinatesIfTankFires(t)
+	if v == nil {
+		return nil
+	}
+	return b.getTankAt(v.Unwrap())
 }
 
 func (b *battlefield) areCoordsValid(x, y int) bool {
@@ -218,7 +237,7 @@ func (b *battlefield) selectRandomMapCoordsByAllowanceFunc(allowanceFunc func(x,
 	return &candidates[index]
 }
 
-func (b *battlefield) trySpawnNewEnemy() bool {
+func (b *battlefield) trySpawnNewEnemy(team byte) bool {
 	v := b.selectRandomMapCoordsByAllowanceFunc(func(x, y int) bool {
 		return b.tileAt(x, y).is(TILE_FLOOR) &&
 			b.getTankAt(x, y) == nil &&
@@ -234,7 +253,7 @@ func (b *battlefield) trySpawnNewEnemy() bool {
 		newTankCode = TANK_ENEMY_ARMORED
 	}
 
-	newTank := createTank(newTankCode, TEAM_ENEMY1, v.X, v.Y)
+	newTank := createTank(newTankCode, team, v.X, v.Y)
 	newTank.faceRandomDirection()
 	b.tanks = append(b.tanks, newTank)
 

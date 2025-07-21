@@ -19,7 +19,7 @@ func GenerateNewReward() *GameReward {
 		for repeated {
 			repeated = false
 			generatedId := card.GetRandomCardId()
-			if card.IsCardIdCommon(generatedId) && rand.Intn(2) == 0 {
+			if card.IsCardIdCommon(generatedId) && rand.Intn(1) == 0 {
 				generatedId = card.GetRandomCardId()
 			}
 			cardIds[i] = generatedId

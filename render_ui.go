@@ -23,7 +23,8 @@ var MulliganButton = image.Rect(0, WINDOW_H-100, 150, WINDOW_H)
 func (r *renderer) renderBattlefieldInfo() {
 	bfW := len(r.bf.tiles) * TILE_SIZE_PIXELS
 	r.drawString(fmt.Sprintf("Current phase: %s", r.bf.state.currentStateName()), int32(bfW+4), 4, 24, rl.White)
-	r.drawString(r.bf.GetMissionProgressString(), int32(bfW+4), 30, 24, rl.White)
+	r.drawString(fmt.Sprintf("Health: %d/%d", r.bf.playerTank.health, r.bf.playerTank.GetMaxHealth()), int32(bfW+4), 30, 24, rl.White)
+	r.drawString(r.bf.GetMissionProgressString(), int32(bfW+4), 60, 24, rl.White)
 }
 
 func (r *renderer) renderButtons() {
