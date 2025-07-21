@@ -10,6 +10,7 @@ const (
 	TANK_ENEMY
 	TANK_ENEMY_FAST
 	TANK_ENEMY_ARMORED
+	TANK_ENEMY_BOSS
 )
 
 type tank struct {
@@ -25,6 +26,7 @@ type tank struct {
 	x, y              int
 	health            int
 	additionalActions int // Makes (player actions this turn) + this value
+	minimumActionsEachTurn    int
 
 	justSpawned bool // For the renderer; no gameplay effect
 }
@@ -37,14 +39,14 @@ func createTank(code, team byte, x, y int) *tank {
 		y:           y,
 		dirX:        0,
 		dirY:        -1,
-		health:      1,
 		justSpawned: true,
 	}
+	t.health = t.GetMaxHealth()
 	switch code {
 	case TANK_ENEMY_FAST:
 		t.additionalActions = 1
-	case TANK_ENEMY_ARMORED:
-		t.health = 1
+	case TANK_ENEMY_BOSS:
+		t.minimumActionsEachTurn = 1
 	}
 	return t
 }
@@ -52,13 +54,27 @@ func createTank(code, team byte, x, y int) *tank {
 func (t *tank) getSpriteAtlas() *spriteAtlas {
 	switch t.code {
 	case TANK_ENEMY:
-		return tankAtlaces["TANK5"]
+		return tankAtlaces["TANK7"]
 	case TANK_ENEMY_FAST:
 		return tankAtlaces["TANK6"]
 	case TANK_ENEMY_ARMORED:
-		return tankAtlaces["TANK7"]
+		return tankAtlaces["TANK4"]
+	case TANK_ENEMY_BOSS:
+		return tankAtlaces["TANK8"]
 	}
 	return tankAtlaces["TANK1"]
+}
+
+func (t *tank) GetMaxHealth() int {
+	switch t.code {
+	case TANK_PLAYER:
+		return 3
+	case TANK_ENEMY_ARMORED:
+		return 2
+	case TANK_ENEMY_BOSS:
+		return 3
+	}
+	return 1
 }
 
 func (t *tank) getCoords() (int, int) {

@@ -9,45 +9,7 @@ func createBattlefieldSkirmish(spawners, teamLimit, totalEnemies int) *battlefie
 		mission:         BFM_SKIRMISH,
 	}
 	b.playerTank = createTank(TANK_PLAYER, TEAM_PLAYER, 2+rand.Intn(6), 2+rand.Intn(6))
-
-	// b.placeNTilesAtRandomByAllowanceFunc(spawners, TILE_ENEMY_SPAWNER, func(x, y int) bool {
-	// 	return b.tileAt(x, y).code == TILE_FLOOR &&
-	// 		b.countTilesOfTypeAroundCoords(TILE_ENEMY_SPAWNER, x, y) == 0 &&
-	// 		b.getTankAt(x, y) == nil &&
-	// 		!b.lineOfFireExistsBetweenCoords(b.playerTank.x, b.playerTank.y, x, y)
-	// })
-
-	b.placeNTilesAtRandomByAllowanceFunc(20, TILE_WALL, func(x, y int) bool {
-		return b.tileAt(x, y).code == TILE_FLOOR && b.getTankAt(x, y) == nil
-	})
-
-	b.placeNTilesAtRandomByAllowanceFunc(10, TILE_ARMOR, func(x, y int) bool {
-		return b.tileAt(x, y).code == TILE_FLOOR && b.getTankAt(x, y) == nil &&
-			b.countTilesOfTypeAroundCoords(TILE_WALL, x, y) == 1 &&
-			b.countTilesOfTypeAroundCoords(TILE_ARMOR, x, y) < 2 &&
-			b.countTilesOfTypeAroundCoords(TILE_ENEMY_SPAWNER, x, y) == 0
-	})
-
-	b.placeNTilesAtRandomByAllowanceFunc(5, TILE_FOREST, func(x, y int) bool {
-		return b.tileAt(x, y).code == TILE_FLOOR &&
-			b.getTankAt(x, y) == nil
-	})
-
-	b.placeNTilesAtRandomByAllowanceFunc(5, TILE_WATER, func(x, y int) bool {
-		return b.getTankAt(x, y) == nil &&
-			b.tileAt(x, y).code == TILE_FLOOR
-	})
-
-	b.placeNTilesAtRandomByAllowanceFunc(3, TILE_ICE, func(x, y int) bool {
-		return b.getTankAt(x, y) == nil &&
-			b.tileAt(x, y).code == TILE_FLOOR &&
-			b.countTilesOfTypeAroundCoords(TILE_WATER, x, y) > 0
-	})
-
-	b.placeNTilesAtRandomByAllowanceFunc(2, TILE_ICE, func(x, y int) bool {
-		return b.getTankAt(x, y) == nil &&
-			b.tileAt(x, y).code == TILE_FLOOR
-	})
+	b.randomlyFillMapWithBasicTiles()
 
 	for range teamLimit {
 		b.trySpawnNewEnemy()
@@ -58,42 +20,12 @@ func createBattlefieldSkirmish(spawners, teamLimit, totalEnemies int) *battlefie
 func createBattlefieldCaptureFlags(spawners, teamLimit int) *battlefield {
 	b := &battlefield{
 		maxTanksPerTeam: teamLimit,
-		totalEnemyTanks: 100,
+		totalEnemyTanks: 1000,
 		mission:         BFM_CAPTURE_FLAGS,
 	}
 	b.playerTank = createTank(TANK_PLAYER, TEAM_PLAYER, 2+rand.Intn(6), 2+rand.Intn(6))
 
-	b.placeNTilesAtRandomByAllowanceFunc(20, TILE_WALL, func(x, y int) bool {
-		return b.tileAt(x, y).code == TILE_FLOOR && b.getTankAt(x, y) == nil
-	})
-
-	b.placeNTilesAtRandomByAllowanceFunc(10, TILE_ARMOR, func(x, y int) bool {
-		return b.tileAt(x, y).code == TILE_FLOOR && b.getTankAt(x, y) == nil &&
-			b.countTilesOfTypeAroundCoords(TILE_WALL, x, y) == 1 &&
-			b.countTilesOfTypeAroundCoords(TILE_ARMOR, x, y) < 2 &&
-			b.countTilesOfTypeAroundCoords(TILE_ENEMY_SPAWNER, x, y) == 0
-	})
-
-	b.placeNTilesAtRandomByAllowanceFunc(5, TILE_FOREST, func(x, y int) bool {
-		return b.tileAt(x, y).code == TILE_FLOOR &&
-			b.getTankAt(x, y) == nil
-	})
-
-	b.placeNTilesAtRandomByAllowanceFunc(5, TILE_WATER, func(x, y int) bool {
-		return b.getTankAt(x, y) == nil &&
-			b.tileAt(x, y).code == TILE_FLOOR
-	})
-
-	b.placeNTilesAtRandomByAllowanceFunc(3, TILE_ICE, func(x, y int) bool {
-		return b.getTankAt(x, y) == nil &&
-			b.tileAt(x, y).code == TILE_FLOOR &&
-			b.countTilesOfTypeAroundCoords(TILE_WATER, x, y) > 0
-	})
-
-	b.placeNTilesAtRandomByAllowanceFunc(2, TILE_ICE, func(x, y int) bool {
-		return b.getTankAt(x, y) == nil &&
-			b.tileAt(x, y).code == TILE_FLOOR
-	})
+	b.randomlyFillMapWithBasicTiles()
 
 	for range teamLimit {
 		b.trySpawnNewEnemy()
@@ -104,7 +36,7 @@ func createBattlefieldCaptureFlags(spawners, teamLimit int) *battlefield {
 func createBattlefieldDestroyEagles(spawners, teamLimit int) *battlefield {
 	b := &battlefield{
 		maxTanksPerTeam: teamLimit,
-		totalEnemyTanks: 100,
+		totalEnemyTanks: 1000,
 		mission:         BFM_DESTROY_EAGLES,
 	}
 	b.playerTank = createTank(TANK_PLAYER, TEAM_PLAYER, 2+rand.Intn(6), 2+rand.Intn(6))
@@ -116,6 +48,41 @@ func createBattlefieldDestroyEagles(spawners, teamLimit int) *battlefield {
 			!b.lineOfFireExistsBetweenCoords(b.playerTank.x, b.playerTank.y, x, y)
 	})
 
+	b.randomlyFillMapWithBasicTiles()
+
+	for range teamLimit {
+		b.trySpawnNewEnemy()
+	}
+	return b
+}
+
+func createBattlefieldBossFight(teamLimit int) *battlefield {
+	b := &battlefield{
+		maxTanksPerTeam: teamLimit,
+		totalEnemyTanks: 1000,
+		mission:         BFM_BOSS_FIGHT,
+	}
+	b.playerTank = createTank(TANK_PLAYER, TEAM_PLAYER, 2+rand.Intn(6), 2+rand.Intn(6))
+	b.randomlyFillMapWithBasicTiles()
+	v := b.selectRandomMapCoordsByAllowanceFunc(func(x, y int) bool {
+		return b.tileAt(x, y).is(TILE_FLOOR) &&
+			b.getTankAt(x, y) == nil &&
+			!b.lineOfFireExistsBetweenCoords(x, y, b.playerTank.x, b.playerTank.y)
+	})
+	if v == nil {
+		panic("Failed to generate mission.")
+	}
+
+	b.enemyBossTank = createTank(TANK_ENEMY_BOSS, TEAM_ENEMY1, v.X, v.Y)
+	b.tanks = append(b.tanks, b.enemyBossTank)
+
+	for range teamLimit {
+		b.trySpawnNewEnemy()
+	}
+	return b
+}
+
+func (b *battlefield) randomlyFillMapWithBasicTiles() {
 	b.placeNTilesAtRandomByAllowanceFunc(20, TILE_WALL, func(x, y int) bool {
 		return b.tileAt(x, y).code == TILE_FLOOR && b.getTankAt(x, y) == nil
 	})
@@ -147,11 +114,6 @@ func createBattlefieldDestroyEagles(spawners, teamLimit int) *battlefield {
 		return b.getTankAt(x, y) == nil &&
 			b.tileAt(x, y).code == TILE_FLOOR
 	})
-
-	for range teamLimit {
-		b.trySpawnNewEnemy()
-	}
-	return b
 }
 
 // Generation functions
@@ -175,4 +137,3 @@ func (b *battlefield) placeNTilesWithTeamAtRandomByAllowanceFunc(count int, newC
 		b.tileAt(c.Unwrap()).team = team
 	}
 }
-

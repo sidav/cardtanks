@@ -69,7 +69,6 @@ func (b *battlefield) actOnState(plr *player) {
 			}
 			return
 		}
-		currTank := b.tanks[st.currentEntityNumber]
 		b.clearDestroyedTanks()
 		if b.areAnyTanksOnIce() {
 			anythingPushed := b.tryPushingAllTanksOnIce()
@@ -78,7 +77,14 @@ func (b *battlefield) actOnState(plr *player) {
 				return
 			}
 		}
-		if currTank.madeActionsThisTurn >= plr.actionsSpentForTurn + currTank.additionalActions {
+		sunken := b.trySinkingTanks()
+		if sunken {
+			st.pauseFor(300)
+		}
+
+		currTank := b.tanks[st.currentEntityNumber]
+		if currTank.madeActionsThisTurn >= plr.actionsSpentForTurn+currTank.additionalActions &&
+			currTank.madeActionsThisTurn >= currTank.minimumActionsEachTurn {
 			st.currentEntityNumber++
 			return
 		}
@@ -86,7 +92,6 @@ func (b *battlefield) actOnState(plr *player) {
 		b.actForNonplayerTank(currTank)
 		currTank.madeActionsThisTurn++
 		st.resetTime()
-		b.trySinkingTanks()
 		st.pauseFor(250)
 
 	case BS_SHOOT:

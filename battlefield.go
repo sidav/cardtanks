@@ -17,10 +17,11 @@ const (
 )
 
 type battlefield struct {
-	state      battlefieldState
-	tiles      [BF_WIDTH][BF_HEIGHT]tile
-	playerTank *tank
-	tanks      []*tank
+	state         battlefieldState
+	tiles         [BF_WIDTH][BF_HEIGHT]tile
+	playerTank    *tank
+	enemyBossTank *tank
+	tanks         []*tank
 
 	mission             battlefieldMissionId
 	missionProgress     int // general-purpose integer

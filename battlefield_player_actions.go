@@ -105,8 +105,11 @@ func (b *battlefield) playPlayerCard(plr *player, c *card.Card) {
 		}
 		b.state.pauseFor(300)
 
-	case card.CARD_APPLY_RANDOM_TEAMS:
+	case card.CARD_ASSIGN_RANDOM_TEAMS:
 		for _, t := range b.tanks {
+			if t == b.enemyBossTank {
+				continue
+			}
 			newTeam := TEAM_PLAYER
 			for newTeam == TEAM_PLAYER || newTeam == TEAM_NONE {
 				newTeam = rand.Intn(MAX_TEAM_CONST)

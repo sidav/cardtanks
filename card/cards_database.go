@@ -21,7 +21,7 @@ const (
 	CARD_FRIENDLYTANK
 	CARD_BUILD_WALLS_AROUND
 	CARD_ROTATE_EVERYONE_RANDOMLY
-	CARD_APPLY_RANDOM_TEAMS
+	CARD_ASSIGN_RANDOM_TEAMS
 	CARD_SAFE_TELEPORT
 	CARD_UNEXHAUST_OTHER_CARDS
 	TOTAL_CARDS
@@ -116,7 +116,7 @@ func CreateCardById(id CardId) *Card {
 			Title:       "Short circuit",
 			description: "Rotate all tanks (including you) randomly.",
 		}
-	case CARD_APPLY_RANDOM_TEAMS:
+	case CARD_ASSIGN_RANDOM_TEAMS:
 		c = &Card{
 			ActionsCost:    3,
 			Title:          "Mayhem",

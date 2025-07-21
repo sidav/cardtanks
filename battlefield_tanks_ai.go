@@ -46,7 +46,7 @@ func (b *battlefield) aiWillTankMoveForward(t *tank) bool {
 		return b.areTanksEnemies(t, tankThere)
 	}
 	return b.areCoordsValid(nextX, nextY) &&
-		b.aiWillTankDriveOnTile(b.tileAt(nextX, nextY))
+		b.aiWillTankDriveOnTile(t, b.tileAt(nextX, nextY))
 }
 
 func (b *battlefield) aiWillTankShoot(t *tank) bool {
@@ -64,8 +64,11 @@ func (b *battlefield) aiWillTankShoot(t *tank) bool {
 	return false
 }
 
-func (b *battlefield) aiWillTankDriveOnTile(t *tile) bool {
-	return t.canBeDrivenOn() && !t.is(TILE_WATER)
+func (b *battlefield) aiWillTankDriveOnTile(tnk *tank, til *tile) bool {
+	if (tnk.code == TANK_ENEMY_BOSS && til.is(TILE_ICE)) {
+		return false
+	}
+	return til.canBeDrivenOn() && !til.is(TILE_WATER)
 }
 
 func  (b *battlefield) aiWillTankShootAtTile(tnk *tank, til *tile) bool {

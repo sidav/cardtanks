@@ -69,6 +69,8 @@ func (g *game) selectBattle() {
 		g.bf = createBattlefieldCaptureFlags(0, 3+g.wonMissions/2)
 	case BFM_DESTROY_EAGLES:
 		g.bf = createBattlefieldDestroyEagles(0, 3+g.wonMissions/2)
+	case BFM_BOSS_FIGHT:
+		g.bf = createBattlefieldBossFight(3 + g.wonMissions/2)
 	default:
 		panic("No mission implementation")
 	}

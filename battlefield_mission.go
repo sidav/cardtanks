@@ -11,6 +11,7 @@ const (
 	BFM_SKIRMISH battlefieldMissionId = iota
 	BFM_CAPTURE_FLAGS
 	BFM_DESTROY_EAGLES
+	BFM_BOSS_FIGHT
 	BFM_MISSIONS_COUNT
 )
 
@@ -39,6 +40,12 @@ func (b *battlefield) GetMissionBriefing() (missTitle, missDescr string) {
 			"Destroy %d enemy eagles to win\n"+
 				"Max %d enemies will appear at the same time, and +1 for each destroyed eagle",
 			MISSION_EAGLES_TO_DESTROY, b.maxTanksPerTeam)
+	case BFM_BOSS_FIGHT:
+		missTitle = "Overlord"
+		missDescr = fmt.Sprintf(
+			"Destroy Big Bad Boss to win\n"+
+				"Max %d enemies will appear at the same time, and +1 for each time the boss is hit",
+			b.maxTanksPerTeam)
 	}
 	if b.spawnFastEnemies {
 		missDescr += "\n\n Fast tanks may appear!"
@@ -58,6 +65,8 @@ func (b *battlefield) GetMissionProgressString() string {
 		return fmt.Sprintf("%d/%d flags taken", b.missionProgress, MISSION_FLAGS_TO_CAPTURE)
 	case BFM_DESTROY_EAGLES:
 		return fmt.Sprintf("%d eagles left to destroy", b.countTilesOfType(TILE_EAGLE))
+	case BFM_BOSS_FIGHT:
+		return fmt.Sprintf("Boss health: %d/%d", b.enemyBossTank.health, b.enemyBossTank.GetMaxHealth())
 	}
 	return "No description"
 }
@@ -80,6 +89,10 @@ func (b *battlefield) doMissionSpecificCheck() {
 		b.maxTanksPerTeam -= b.missionProgress
 		b.missionProgress = MISSION_EAGLES_TO_DESTROY - b.countTilesOfType(TILE_EAGLE)
 		b.maxTanksPerTeam += b.missionProgress
+	case BFM_BOSS_FIGHT:
+		b.maxTanksPerTeam -= b.missionProgress
+		b.missionProgress = b.enemyBossTank.GetMaxHealth() - b.enemyBossTank.health
+		b.maxTanksPerTeam += b.missionProgress
 	}
 }
 
@@ -91,6 +104,8 @@ func (b *battlefield) IsMissionWon() bool {
 		return b.missionProgress == MISSION_FLAGS_TO_CAPTURE
 	case BFM_DESTROY_EAGLES:
 		return b.countTilesOfType(TILE_EAGLE) == 0
+	case BFM_BOSS_FIGHT:
+		return b.enemyBossTank.health <= 0
 	}
 	return false
 }
